@@ -1,0 +1,69 @@
+@keyframes flash-letter {
+    0% {
+        opacity: 0.45
+    }
+
+    30% {
+        opacity: 0.8
+    }
+
+    40% {
+        opacity: 0.55
+    }
+
+    100% {
+        opacity: 0.41
+    }
+}
+
+.AppHeader {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  color: #ACB9FF;
+  letter-spacing: 7px;
+  line-height: 24px;
+
+  span {
+    animation-name: flash-letter;
+    animation-iteration-count: infinite;
+    animation-duration: 3.2s;
+    animation-timing-function: ease;
+    animation-fill-mode: none;
+
+    &.l {
+      animation-delay: 0
+    }
+    &.i {
+      animation-delay: 100ms
+    }
+    &.g {
+      animation-delay: 200ms
+    }
+    &.h {
+      animation-delay: 300ms;
+    }
+    &.t {
+      animation-delay: 400ms;
+    }
+    &.w {
+      animation-delay: 500ms;
+    }
+    &.a {
+      animation-delay: 600ms;
+    }
+    &.l-1 {
+      animation-delay: 700ms;
+    }
+    &.l-2 {
+      animation-delay: 800ms;
+    }
+    &.e {
+      animation-delay: 900ms;
+    }
+    &.t-1 {
+      animation-delay: 1000ms;
+    }
+  }
+}

@@ -1,0 +1,28 @@
+@import 'bootstrap.scss';
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,600,700);
+
+body {
+  font-family: 'Open Sans', Avenir, Helvetica, sans-serif;
+}
+
+.btn-primary {
+  color: #B0B7DE;
+  background: #2B3880;
+  border: none;
+  outline: none;
+  transition: all 300ms;
+
+  &:hover,
+  &:focus {
+    color: white;
+    background: #2B3880;
+    outline: none;
+  }
+}
+
+.btn-secondary {
+  color: #7380B9;
+  background: transparent;
+  border: 1px solid #3C4A93;
+  outline: none;
+}
