@@ -31,7 +31,6 @@ const AsyncBalanceLoader = React.createClass({
 
   componentDidMount() {
     lightwalletLib.getBalanceForAddress(this.props.balance).then((bal)=>{
-      console.log(bal);
       this.setState({isLoading: false, balanceValue: bal});
     })
   },
@@ -46,19 +45,26 @@ const AsyncBalanceLoader = React.createClass({
 });
 
 export default React.createClass({
-  render() {
+  mixins: [History],
 
+  onRowClick(account) {
+    this.history.pushState(null, `/send/from/${account}`)
+  },
+
+  render() {
     const accounts = lightwalletLib.getAvailableAddresses();
 
     const tableRows = accounts.map((account)=>{
-      return (<tr key={account}>
-        <td>
-          {account}
-        </td>
-        <td>
-          <AsyncBalanceLoader balance={account} />
-        </td>
-      </tr>);
+      return (
+        <tr key={account} onClick={this.onRowClick.bind(null, account)}>
+          <td className='AccountValue'>
+            {account}
+          </td>
+          <td>
+            <AsyncBalanceLoader balance={account} />
+          </td>
+        </tr>
+      );
     });
 
     return (

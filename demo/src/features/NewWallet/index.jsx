@@ -120,7 +120,7 @@ export const HomeView = React.createClass({
             :
             <div>
               <p>Enter a password to encrypt your Passphrase in the Browser</p>
-              <input type='password' onKeyDown={this.onPasswordChange} />
+              <input type='password' onKeyUp={this.onPasswordChange} />
               <button onClick={()=>{
                 this.onCreateLightwallet()
               }}>Encrypt my Passphrase</button>

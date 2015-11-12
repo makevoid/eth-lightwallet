@@ -5,6 +5,14 @@
 
     tr {
       line-height: 45px;
+
+      .AccountValue {
+        font-family: Menlo, 'Courier New', sans-serif;
+        &:before {
+          content: '0x'
+        }
+      }
+
     }
 
     td + td {
@@ -22,6 +30,17 @@
 
       td + td {
         text-align: right;
+      }
+    }
+
+    tbody {
+      tr {
+        &:hover {
+          background: #C0C5DC;
+          color: #3E385E;
+          cursor: pointer;
+          padding: 0 1em;
+        }
       }
     }
   }

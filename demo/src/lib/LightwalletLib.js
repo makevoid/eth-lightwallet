@@ -45,6 +45,7 @@ export default class LightwalletLib {
   }
 
   createNewWallet( randomSeed, password ){
+    console.log(randomSeed, password);
     this.keyStore = new lightwallet.keystore(
       randomSeed,
       password
@@ -68,7 +69,18 @@ export default class LightwalletLib {
   }
 
   formatBalance(balance) {
-    return (balance / Math.pow(10, 18)).toFixed(3) + ' Ether';
+    return (balance / Math.pow(10, 18)).toFixed(3);
+  }
+
+  sendEther( fromAddress, toAddress, etherAmount ) {
+    console.log(fromAddress, toAddress, etherAmount);
+    var value = parseFloat(etherAmount)*1.0e18
+    var gasPrice = 50000000000
+    var gas = 50000
+    this.web3.eth.sendTransaction({from: fromAddress, to: toAddress, value: value, gasPrice: gasPrice, gas: gas}, function (err, txhash) {
+      console.log('error: ' + err)
+      console.log('txhash: ' + txhash)
+    })
   }
 
 }
