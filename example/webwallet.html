@@ -4,7 +4,10 @@
     <script type="text/javascript" src="../node_modules/web3/dist/web3.js"></script>
     <script type="text/javascript" src="../node_modules/hooked-web3-provider/build/hooked-web3-provider.js"></script>
     <script type="text/javascript" src="../node_modules/async/lib/async.js"></script>
+    <link rel="stylesheet" href="css/vendor/milligram.css" media="screen" charset="utf-8">
+    <style media="screen">
 
+    </style>
     <script>
 
       var web3 = new Web3();
@@ -12,7 +15,7 @@
 
       function setWeb3Provider(keystore) {
         var web3Provider = new HookedWeb3Provider({
-          host: "http://104.236.65.136:8545",
+          host: "http://127.0.0.1:8545",
           transaction_signer: keystore
         });
 
@@ -20,10 +23,10 @@
       }
 
       function newAddresses(password) {
-        
-        if (password == '') {
-          password = prompt('Enter password to retrieve addresses', 'Password');
-        }
+
+        // if (password == '') {
+        //   password = prompt('Enter password to retrieve addresses', 'Password');
+        // }
 
         var numAddr = parseInt(document.getElementById('numAddr').value)
 
@@ -45,7 +48,7 @@
       }
 
       function getBalances() {
-        
+
         var addresses = global_keystore.getAddresses();
         document.getElementById('addr').innerHTML = 'Retrieving addresses...'
 
@@ -61,51 +64,57 @@
       }
 
       function setSeed() {
-        var password = prompt('Enter Password to encrypt your seed', 'Password');
-                                              
+        // var password = prompt('Enter Password to encrypt your seed', 'Password');
+        var password = "";
+
         lightwallet.keystore.deriveKeyFromPassword(password, function(err, pwDerivedKey) {
 
         global_keystore = new lightwallet.keystore(
-          document.getElementById('seed').value, 
+          document.getElementById('seed').value,
           pwDerivedKey);
 
         document.getElementById('seed').value = ''
-        
+
         newAddresses(password);
         setWeb3Provider(global_keystore);
-        
+
         getBalances();
         })
       }
 
       function newWallet() {
-        var extraEntropy = document.getElementById('userEntropy').value;
-        document.getElementById('userEntropy').value = '';
-        var randomSeed = lightwallet.keystore.generateRandomSeed(extraEntropy);
+        // var extraEntropy = document.getElementById('userEntropy').value;
+        // document.getElementById('userEntropy').value = '';
+        // var randomSeed = lightwallet.keystore.generateRandomSeed(extraEntropy);
+        var randomSeed = lightwallet.keystore.generateRandomSeed();
 
-        var infoString = 'Your new wallet seed is: "' + randomSeed + 
+        var infoString = 'Your new wallet seed is: "' + randomSeed +
           '". Please write it down on paper or in a password manager, you will need it to access your wallet. Do not let anyone see this seed or they can take your Ether. ' +
           'Please enter a password to encrypt your seed while in the browser.'
-        var password = prompt(infoString, 'Password');
+        // var password = prompt(infoString, 'Password');
+        var password = "";
 
         lightwallet.keystore.deriveKeyFromPassword(password, function(err, pwDerivedKey) {
 
-        global_keystore = new lightwallet.keystore(
-          randomSeed,
-          pwDerivedKey);
-                
-        newAddresses(password);
-        setWeb3Provider(global_keystore);
-        getBalances();
+          global_keystore = new lightwallet.keystore(
+            randomSeed,
+            pwDerivedKey);
+
+          newAddresses(password);
+          setWeb3Provider(global_keystore);
+          getBalances();
+          showSeed()
         })
       }
 
       function showSeed() {
-        var password = prompt('Enter password to show your seed. Do not let anyone else see your seed.', 'Password');
+        // var password = prompt('Enter password to show your seed. Do not let anyone else see your seed.', 'Password');
+        var password = "";
 
         lightwallet.keystore.deriveKeyFromPassword(password, function(err, pwDerivedKey) {
         var seed = global_keystore.getSeed(pwDerivedKey);
-        alert('Your seed is: "' + seed + '". Please write it down.')
+        document.querySelector(".displaySeed").innerHTML = seed
+        // alert('Your seed is: "' + seed + '". Please write it down.')
         })
       }
 
@@ -142,31 +151,72 @@
         contract[functionName].apply(this, args)
       }
 
-    </script>
-    <h1>LightWallet</h1>
-    <h2>New Wallet</h2>
-    <div><input type="text" id="userEntropy" placeholder="Type random text to generate entropy" size="80"></input><button onclick="newWallet()">Create New Wallet</button></div>
+  </script>
+
+    <h1>Light Wallet</h1>
+    <p>
+      TODO:
+    </p>
+    <ul>
+      <li>Geth ether from faucet (or)</li>
+      <li>Add address to genesis block and restart</li>
+    </ul>
+
+
     <h2>Restore Wallet</h2>
-    <div><input type="text" id="seed" value="" size="80"></input><button onclick="setSeed()">Restore wallet from Seed</button></div>
+    <div>
+      <input id="seed" size="80" type="text" value=""><button  onclick="setSeed()">Restore wallet from Seed</button>
+    </div>
     <h2>Show Addresses</h2>
-    <div>Show <input type="text" id="numAddr" size="5" value="3"></input> more address(es) <button onclick="newAddresses('')">Show</button></div>
+    <div>
+      Show <input id="numAddr" size="5" type="text" value="3"> more address(es)  <button onclick="newAddresses('')">Show</button>
+    </div>
     <div id="addr"></div>
-    <div><button onClick='getBalances()'>Refresh</button></div>
+    <div>
+      <button onclick='getBalances()'>Refresh</button>
+    </div>
     <h2>Send Ether</h2>
-    <div>From: <select id="sendFrom"></select></div>
-    <div>To: <input type="text" size="40" id="sendTo"></input></div>
-    <div>Ether: <input type="text" id="sendValueAmount"></div>
-    <div><button onclick="sendEth()">Send Ether</button></div>
-    <h2>Show Seed</h2>
-    <button onclick="showSeed()">Show Seed</button>
+    <div>
+      From: <select id="sendFrom">
+        </select>
+    </div>
+    <div>
+      To: <input id="sendTo" size="40" type="text">
+    </div>
+    <div>
+      Ether: <input id="sendValueAmount" type="text">
+    </div>
+    <div>
+      <button onclick="sendEth()">Send Ether</button>
+    </div>
     <h2>Function Call</h2>
-    <div>Caller: <select id="functionCaller"></select></div>
-    <div>Contract Address: <input type="text" size="40" id="contractAddr"></input></div>
-    <div>Contract ABI: <input type="text" size="40" id="contractAbi"></input></div>
-    <div>Function Name: <input type="text" size="20" id="functionName"></input></div>
-    <div>Function Arguments: <input type="text" size="40" id="functionArgs"></input></div>
-    <div>Value (Ether): <input type="text" id="sendValueAmount"></div>
-    <div><button onclick="functionCall()">Call Function</button></div>
+    <div>
+      Caller: <select id="functionCaller">
+        </select>
+    </div>
+    <div>
+      Contract Address: <input id="contractAddr" size="40" type="text">
+    </div>
+    <div>
+      Contract ABI: <input id="contractAbi" size="40" type="text">
+    </div>
+    <div>
+      Function Name: <input id="functionName" size="20" type="text">
+    </div>
+    <div>
+      Function Arguments: <input id="functionArgs" size="40" type="text">
+    </div>
+    <div>
+      Value (Ether): <input id="sendValueAmount" type="text">
+    </div>
+    <div>
+      <button onclick="functionCall()">Call</button>
+    </div>
+
+    <br>
+    <button onclick="newWallet()">Create New Wallet</button>
+    <h5>Seed:</h5>
+    <div class="displaySeed"></div>
 
   </body>
 </html>
