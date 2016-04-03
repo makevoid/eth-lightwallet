@@ -1,21 +1,51 @@
 <html>
-  <body>
+  <body onload="init()">
     <script src="../dist/lightwallet.min.js"></script>
     <script type="text/javascript" src="../node_modules/web3/dist/web3.js"></script>
     <script type="text/javascript" src="../node_modules/hooked-web3-provider/build/hooked-web3-provider.js"></script>
     <script type="text/javascript" src="../node_modules/async/lib/async.js"></script>
     <link rel="stylesheet" href="css/vendor/milligram.css" media="screen" charset="utf-8">
     <style media="screen">
+      body {
+        width: 90%;
+        margin: 30px auto;
+      }
+
+      .s10 { height: 10px }
+      .s20 { height: 20px }
+      .s30 { height: 30px }
+      .s40 { height: 40px }
+      .s50 { height: 50px }
 
     </style>
     <script>
+      "use strict"
+
+      // values are hardcoded here, BAPP should be giving these values to this page/app
+      //
+      // Contract: SimpleStorage - deployment: msivoid.local
+      var contractAddress = "0x015c035ef1fa196a8c250e5169a6b649a0e77321"
+      var contractAbi = `[{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"value","type":"bytes32"}],"type":"function"},{"constant":false,"inputs":[{"name":"value","type":"bytes32"}],"name":"set","outputs":[],"type":"function"}]`
+      var functionName = "get"
+      var functionArgs = "[]"
+
+      // var gethHost = "http://104.236.65.136:8545"
+      // var gethHost = "http://127.0.0.1:8545"
+      var gethHost = "http://localhost:8545"
 
       var web3 = new Web3();
       var global_keystore;
 
+      var store = localStorage
+
+      var init = function() {
+        if (store.seed)
+          setSeed()
+      }
+
       function setWeb3Provider(keystore) {
         var web3Provider = new HookedWeb3Provider({
-          host: "http://127.0.0.1:8545",
+          host: gethHost,
           transaction_signer: keystore
         });
 
@@ -28,7 +58,8 @@
         //   password = prompt('Enter password to retrieve addresses', 'Password');
         // }
 
-        var numAddr = parseInt(document.getElementById('numAddr').value)
+        // var numAddr = parseInt(document.getElementById('numAddr').value)
+        var numAddr = 1
 
         lightwallet.keystore.deriveKeyFromPassword(password, function(err, pwDerivedKey) {
 
@@ -36,14 +67,15 @@
 
         var addresses = global_keystore.getAddresses();
 
-        document.getElementById('sendFrom').innerHTML = ''
+        // document.getElementById('sendFrom').innerHTML = ''
         document.getElementById('functionCaller').innerHTML = ''
         for (var i=0; i<addresses.length; ++i) {
-          document.getElementById('sendFrom').innerHTML += '<option value="' + addresses[i] + '">' + addresses[i] + '</option>'
+          // document.getElementById('sendFrom').innerHTML += '<option value="' + addresses[i] + '">' + addresses[i] + '</option>'
           document.getElementById('functionCaller').innerHTML += '<option value="' + addresses[i] + '">' + addresses[i] + '</option>'
         }
 
         getBalances();
+        showSeed()
       })
       }
 
@@ -56,7 +88,7 @@
           async.map(addresses, web3.eth.getTransactionCount, function(err, nonces) {
             document.getElementById('addr').innerHTML = ''
             for (var i=0; i<addresses.length; ++i) {
-              document.getElementById('addr').innerHTML += '<div>' + addresses[i] + ' (Bal: ' + (balances[i] / 1.0e18) + ' ETH, Nonce: ' + nonces[i] + ')' + '</div>'
+              document.getElementById('addr').innerHTML += '<div>' + addresses[i] + ' (Bal: ' + ( (balances[i] / 1.0e18) || 0 ) + ' ETH, Nonce: ' + (nonces[i] || "-") + ')' + '</div>'
             }
           })
         })
@@ -69,16 +101,20 @@
 
         lightwallet.keystore.deriveKeyFromPassword(password, function(err, pwDerivedKey) {
 
+        // var seedValue = document.getElementById('seed').value
+        var seedValue = store.seed
+
         global_keystore = new lightwallet.keystore(
-          document.getElementById('seed').value,
+          seedValue,
           pwDerivedKey);
 
-        document.getElementById('seed').value = ''
+        // document.getElementById('seed').value = ''
 
         newAddresses(password);
         setWeb3Provider(global_keystore);
 
         getBalances();
+        showSeed()
         })
       }
 
@@ -113,7 +149,8 @@
 
         lightwallet.keystore.deriveKeyFromPassword(password, function(err, pwDerivedKey) {
         var seed = global_keystore.getSeed(pwDerivedKey);
-        document.querySelector(".displaySeed").innerHTML = seed
+        document.querySelector(".displaySeed").innerHTML = "seed: "+seed
+        store.seed = seed
         // alert('Your seed is: "' + seed + '". Please write it down.')
         })
       }
@@ -133,23 +170,27 @@
 
       function functionCall() {
         var fromAddr = document.getElementById('functionCaller').value
-        var contractAddr = document.getElementById('contractAddr').value
-        var abi = JSON.parse(document.getElementById('contractAbi').value)
+        var contractAddr = contractAddress
+        var abi = JSON.parse(contractAbi)
         var contract = web3.eth.contract(abi).at(contractAddr)
-        var functionName = document.getElementById('functionName').value
-        var args = JSON.parse('[' + document.getElementById('functionArgs').value + ']')
-        var valueEth = document.getElementById('sendValueAmount').value
+        var args = JSON.parse(functionArgs)
+        var valueEth = 0
         var value = parseFloat(valueEth)*1.0e18
         var gasPrice = 50000000000
         var gas = 3141592
         args.push({from: fromAddr, value: value, gasPrice: gasPrice, gas: gas})
-        var callback = function(err, txhash) {
+        var callback = function(err, dataOrTxHash) {
           console.log('error: ' + err)
-          console.log('txhash: ' + txhash)
+          console.log('data/txHash: ' + dataOrTxHash)
+          var dataAscii = web3.toAscii(dataOrTxHash)
+          console.log('data (ascii): ' + dataAscii)
+          document.querySelector('.callValue').innerHTML = `Value: <strong>${dataAscii}</strong>`
         }
         args.push(callback)
         contract[functionName].apply(this, args)
       }
+
+
 
   </script>
 
@@ -162,20 +203,13 @@
       <li>Add address to genesis block and restart</li>
     </ul>
 
-
-    <h2>Restore Wallet</h2>
-    <div>
-      <input id="seed" size="80" type="text" value=""><button  onclick="setSeed()">Restore wallet from Seed</button>
-    </div>
-    <h2>Show Addresses</h2>
-    <div>
-      Show <input id="numAddr" size="5" type="text" value="3"> more address(es)  <button onclick="newAddresses('')">Show</button>
-    </div>
+    <h3>Wallet address:</h3>
     <div id="addr"></div>
-    <div>
+    <!-- <div>
       <button onclick='getBalances()'>Refresh</button>
-    </div>
-    <h2>Send Ether</h2>
+    </div> -->
+    <!-- As this is for a private blockchain and we're not using Ether as an asset I'm commenting out the send UI -->
+    <!-- <h2>Send Ether</h2>
     <div>
       From: <select id="sendFrom">
         </select>
@@ -188,35 +222,35 @@
     </div>
     <div>
       <button onclick="sendEth()">Send Ether</button>
-    </div>
-    <h2>Function Call</h2>
+    </div> -->
+    <div class="s30"></div>
+    <h3>Methods:</h3>
     <div>
       Caller: <select id="functionCaller">
         </select>
     </div>
-    <div>
-      Contract Address: <input id="contractAddr" size="40" type="text">
-    </div>
-    <div>
-      Contract ABI: <input id="contractAbi" size="40" type="text">
-    </div>
-    <div>
-      Function Name: <input id="functionName" size="20" type="text">
-    </div>
-    <div>
-      Function Arguments: <input id="functionArgs" size="40" type="text">
-    </div>
-    <div>
-      Value (Ether): <input id="sendValueAmount" type="text">
-    </div>
+    <p>
+      Function: get()
+    </p>
+    <p>
+      Params: []
+    </p>
     <div>
       <button onclick="functionCall()">Call</button>
     </div>
+    <div class="s10"></div>
+    <div class="callValue">-</div>
+    <div class="s20"></div>
 
     <br>
-    <button onclick="newWallet()">Create New Wallet</button>
-    <h5>Seed:</h5>
-    <div class="displaySeed"></div>
+    <h3>Wallet:</h3>
+
+    <h5>Private Key Seed:</h5>
+    <div class="displaySeed">-</div>
+    <div class="s30"></div>
+
+    <h5>Reinitialize:</h5>
+    <button onclick="newWallet()">New Wallet</button>
 
   </body>
 </html>
